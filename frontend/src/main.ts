@@ -2422,10 +2422,16 @@ let mobileToolbarReady = false;
 function updateMobileToolbarVisibility(): void {
   const toolbar = document.getElementById('mobile-toolbar');
   if (!toolbar) return;
-  // Show toolbar only on touch devices within mobile viewport width.
-  // Aligned with the CSS media query (pointer: coarse) and (max-width: 768px).
-  const isTouchDevice = window.matchMedia('(pointer: coarse) and (max-width: 768px)').matches;
-  const shouldShow = isTouchDevice && connectionState === 'connected';
+  // Show toolbar only on narrow touch viewports.
+  // NOTE (local patch 2026-10-18): (pointer: coarse) is unreliable on
+  // mobile — some browsers/webviews report pointer:fine (e.g. when
+  // desktop-site mode is requested) — so detect touch capability directly.
+  // Aligned with the CSS media query (max-width: 768px).
+  const isNarrowViewport = window.matchMedia('(max-width: 768px)').matches;
+  const hasTouch = window.matchMedia('(pointer: coarse)').matches
+    || 'ontouchstart' in window
+    || navigator.maxTouchPoints > 0;
+  const shouldShow = isNarrowViewport && hasTouch && connectionState === 'connected';
   toolbar.hidden = !shouldShow;
   const panel = document.getElementById('mobile-toolbar-panel');
   const toggle = document.getElementById('mobile-toolbar-toggle');
